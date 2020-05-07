@@ -9,33 +9,46 @@ const DIRECTION = {
   UP: SIZE * 3,
 };
 
-const STEP_SIZE = 3
+const MAX_STEP = 3;
 export default function Character() {
   //increment left by 32 to swithc off between characters
   // girl character = 96
   const offset = { top: 0, left: 0 };
   //default of character as facing down
-  const [facing, setFacing] = useState(DIRECTION.DOWN)
-  const [step, setStep] = useState(0)
+  const [facing, setFacing] = useState({
+    current: DIRECTION.DOWN,
+    previous: DIRECTION.DOWN,
+  });
+  const [step, setStep] = useState(0);
   useEventListener("keydown", ({ code }) => {
     // equal to negative one also indiacted if the string was not found
     if (code.indexOf("Arrow") === -1) return;
     // code returns ArrowDown, ArrowUp and suche, replacing the Arrow will shorten it down
     const direction = DIRECTION[code.replace("Arrow", "").toUpperCase()];
-    setFacing(direction)
+    // opening up useState with a fatarrow function knows to reach inside the previous state
+    setFacing((prevState) => ({
+      current: direction,
+      previous: prevState.current,
+    }));
   });
   //user effect happens when an piece of state changes
   // the code underneath will be watching when the state facing will change
   useEffect(() => {
-
-  }, [facing])
+    if (facing.current === facing.previous) {
+      setStep((prevState) => (prevState < MAX_STEP - 1 ? prevState + 1 : 0));
+    } else {
+      setStep(0);
+    }
+  }, [facing]);
   return (
     <div
       style={{
         width: SIZE,
         height: SIZE,
         //url will automatically looking into public folder
-        background: `url(/characters.png) -${offset.left}px -${offset.top + facing}px`,
+        background: `url(/characters.png) -${offset.left + step * SIZE}px -${
+          offset.top + facing.current
+        }px`,
       }}
     />
   );
